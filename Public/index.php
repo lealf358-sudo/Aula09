@@ -30,7 +30,7 @@ $livros = [
 
 
 // GET /livros
-$app->get('/livros', function ($request, $response) use ($livros) {
+$app->get('/livros', function ($request, $response) use (&$livros) {
 
     $response->getBody()->write(json_encode($livros));
 
@@ -40,7 +40,7 @@ $app->get('/livros', function ($request, $response) use ($livros) {
 });
 
 // GET /livros/{id}
-$app->get('/livros/{id}', function ($request, $response, $args) use ($livros) {
+$app->get('/livros/{id}', function ($request, $response, $args) use (&$livros) {
 
     $id = (int) $args['id'];
 
@@ -53,6 +53,64 @@ $app->get('/livros/{id}', function ($request, $response, $args) use ($livros) {
             return $response
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus(200);
+        }
+    }
+
+    $erro = [
+        'erro' => 'Livro não encontrado'
+    ];
+
+    $response->getBody()->write(json_encode($erro));
+
+    return $response
+        ->withHeader('Content-Type', 'application/json')
+        ->withStatus(404);
+});
+
+$app->put('/livros/{id}', function ($request, $response, $args) use (&$livros) {
+
+    $dados = $request->getParsedBody();
+    $id = (int) $args['id'];
+
+    foreach ($livros as &$livro) {
+
+        if ($livro['id'] === $id) {
+
+            $livro['titulo'] = $dados['titulo'];
+            $livro['autor'] = $dados['autor'];
+            $livro['ano'] = $dados['ano'];
+
+            $response->getBody()->write(json_encode($livro));
+
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(200);
+        }
+    }
+
+    $erro = [
+        'erro' => 'Livro não encontrado'
+    ];
+
+    $response->getBody()->write(json_encode($erro));
+
+    return $response
+        ->withHeader('Content-Type', 'application/json')
+        ->withStatus(404);
+});
+
+$app->delete('/livros/{id}', function ($request, $response, $args) use (&$livros) {
+
+    $id = (int) $args['id'];
+
+    foreach ($livros as $chave => $livro) {
+
+        if ($livro['id'] === $id) {
+
+            unset($livros[$chave]);
+            $livros = array_values($livros);
+
+            return $response->withStatus(204);
         }
     }
 
